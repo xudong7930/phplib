@@ -13,6 +13,59 @@
 
 
 
+/**
+ * 格式化 12312432.23 to ￥12,312,432.23
+ * @N_money string
+ * @param none $N_money
+ */
+function ExchangeMoney($N_money) {     
+	$A_tmp=explode(".",$N_money ); //将数字按小数点分成两部分，并存入数组$A_tmp     
+	$I_len=strlen($A_tmp[0]); //测出小数点前面位数的宽度  
+	$I_step = 0;
+
+	if($I_len%3==0) {     
+		$I_step=$I_len/3; //如前面位数的宽度mod 3 = 0 ,可按，分成$I_step 部分     
+	}
+	else {     
+		$I_step=($I_len-$I_len%3)/3+1; //如前面位数的宽度mod 3 != 0 ,可按，分成$I_step 部分+1     
+	}     
+
+	$C_cur="";  
+
+	//对小数点以前的金额数字进行转换     
+	while($I_len<>0){     
+		$I_step--;    
+		
+		if ($I_step==0) {     
+			$C_cur .= substr($A_tmp[0],0,$I_len-($I_step)*3);     
+		}
+		else {     
+			$C_cur .= substr($A_tmp[0],0,$I_len-($I_step)*3).",";     
+		}     
+
+		$A_tmp[0]=substr($A_tmp[0],$I_len-($I_step)*3);     
+		$I_len=strlen($A_tmp[0]);     
+	}  
+
+	//对小数点后面的金额的进行转换     
+	if ($A_tmp[1]=="") {     
+		$C_cur .= ".00";     
+	}
+	else {     
+		$I_len=strlen($A_tmp[1]);   
+
+		if ($I_len<2) {     
+			$C_cur .= ".".$A_tmp[1]."0";     
+		}
+		else {     
+			$C_cur .= ".".substr($A_tmp[1],0,2);     
+		}     
+	} 
+
+	//加上人民币符号并传出     
+	$C_cur="￥".$C_cur;     
+	return $C_cur;     
+}
 
 
 /**
@@ -82,6 +135,67 @@ function isempty($string) {
 	if (empty($string)) {return false;}
 	if($string =="") {return false;}
 	return true;
+}
+
+
+/**
+ * 中英文混合的字符串截取, 支持utf-8和gb2312
+ * 
+ * @param  [type] $string  [description]
+ * @param  [type] $length  [description]
+ * @param  string $dot     [description]
+ * @param  string $charset [description]
+ * @return [type]          [description]
+ */
+function get_word($string, $length, $dot = '..',$charset='utf-8') {
+	
+	if(strlen($string) <= $length) {
+		return $string;
+	}
+
+	$string = str_replace(array('　','&nbsp;', '&', '"', '<', '>'), array('','','&', '"', '<', '>'), $string);
+
+	$strcut = '';
+	if(strtolower($charset) == 'utf-8') {
+
+		$n = $tn = $noc = 0;
+		while($n < strlen($string)) {
+
+			$t = ord($string[$n]);
+			if($t == 9 || $t == 10 || (32 <= $t && $t <= 126)) {
+				$tn = 1; $n++; $noc++;
+			} elseif(194 <= $t && $t <= 223) {
+				$tn = 2; $n += 2; $noc += 2;
+			} elseif(224 <= $t && $t < 239) {
+				$tn = 3; $n += 3; $noc += 2;
+			} elseif(240 <= $t && $t <= 247) {
+				$tn = 4; $n += 4; $noc += 2;
+			} elseif(248 <= $t && $t <= 251) {
+				$tn = 5; $n += 5; $noc += 2;
+			} elseif($t == 252 || $t == 253) {
+				$tn = 6; $n += 6; $noc += 2;
+			} else {
+				$n++;
+			}
+
+			if($noc >= $length) {
+				break;
+			}
+
+		}
+		if($noc > $length) {
+			$n -= $tn;
+		}
+
+		$strcut = substr($string, 0, $n);
+
+	} else {
+		for($i = 0; $i < $length; $i++) {
+			$strcut .= ord($string[$i]) > 127 ? $string[$i].$string[++$i] : $string[$i];
+		}
+	}
+
+	return $strcut.$dot;
 }
 
 
@@ -291,3 +405,5 @@ function random($len = 6, $type=1) {
 
 	return $salt;
 }
+
+
