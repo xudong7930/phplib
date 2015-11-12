@@ -1,16 +1,71 @@
 <?php
-/**
-  * ===========================================
-  * Project: phplib
-  * Function: php字符串常用处理函数
-  * Time: 2015-5-20 15:22:16 @ Create
-  * Copyright (c) 2007 - 2015 phplib Studio
-  * Github: https://github.com/xudong7930/phplib
-  * Developer: phplib
-  * E-mail: xudong7930@gmail.com
-  * ===========================================
-  */
 
+
+/**
+ * csv文件导入
+ * 
+ * @param  [type] $filedname 上传文件字段名
+ * @return array  将上传csv文件内容转为数组
+ */
+function import_csv($filedname){
+	$filename = $_FILES[$filedname]['tmp_name'];
+	if(empty($filename)){
+		echo "请选择要导入的CSV文件";exit;
+	}
+
+	$handle = fopen($filename, 'r');   
+    $csv_fileconent = array();
+
+	$n = 0;
+    while ($rows = fgetcsv($handle, 10000)){
+    	$num = count($rows);
+    	for ($i = 0; $i < $num; $i++){
+    		$csv_fileconent[$n][$i] = $rows[$i];
+    	}
+    	$n++;
+    }
+
+    fclose($handle);
+
+    return $csv_fileconent;
+}
+
+
+/**
+ * 将数据导出为csv文件
+ * @param  [type] $filename [description]
+ * @param  [type] $data     [description]
+ * @param  [type] $header    [<description>]
+ * @return [type]           [description]
+ * example:
+ * export_csv("test.csv", 
+ * 				array("用户名","邮件","手机号"),
+ * 			 	array(array("许东","xudong@qq.com","15811448243")));
+ */
+function export_csv($filename, $header, $data){
+	header("Content-type:text/csv; charset=utf-8");   
+    header("Content-Disposition:attachment;filename=".date('YmdHis')."_".$filename);   
+    header('Cache-Control:must-revalidate,post-check=0,pre-check=0');   
+    header('Expires:0');   
+    header('Pragma:public');   
+
+    ob_start();
+    
+    $csv_data = "";
+    if($header){
+    	$csv_data .= implode(",", $header)."\n";
+    }
+
+    if($data){
+    	foreach($data as $item){
+    		$csv_data .= implode(",", $item)."\n";
+    	}
+	}
+
+	ob_end_clean();
+
+    echo $csv_data; 
+}
 
 
 /**
@@ -275,114 +330,12 @@ function getClientIP() {
 }
 
 
-//检查身份证号
-function check_idcard($idcard){
-
-	// 只能是18位
-	if(strlen($idcard)!=18){
-		return false;
-	}
-
-	// 取出本体码
-	$idcard_base = substr($idcard, 0, 17);
-
-	// 取出校验码
-	$verify_code = substr($idcard, 17, 1);
-
-	// 加权因子
-	$factor = array(7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2);
-
-	// 校验码对应值
-	$verify_code_list = array('1', '0', 'X', '9', '8', '7', '6', '5', '4', '3', '2');
-
-	// 根据前17位计算校验码
-	$total = 0;
-	for($i=0; $i<17; $i++){
-		$total += substr($idcard_base, $i, 1)*$factor[$i];
-	}
-
-	// 取模
-	$mod = $total % 11;
-
-	// 比较校验码
-	if($verify_code == $verify_code_list[$mod]){
-		return true;
-	}else{
-		return false;
-	}
-}
 
 
 //检查日期格式是否正确
 function check_date($data) {
 
 }
-
-
-/**
- * 检查邮件地址格式是否正确
- * 
- * @param  string $str 邮件地址
- * @return bool
- */
-function check_mail($str){
-	//return preg_match('/^[^0-9][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[@][a-zA-Z0-9_]+([.][a-zA-Z0-9_]+)*[.][a-zA-Z]{2,4}$/',$mail);
-	return filter_var($str, FILTER_VALIDATE_EMAIL);
-}
-
-
-/**
- * 检查手机号格式是否正确
- * 
- * @param  string $str 手机号
- * @return bool
- */
-function check_mobile($str) {
-	$reg = "/13[0-9]{1}\d{8}|14[5,7]\d{8}|15[012356789]\d{8}|18[012356789]\d{8}/";
-	return preg_match($reg, $str);
-}
-
-
-/**
- * 检查是否是邮编
- * 
- * @param  string $code 邮编
- * @return bool
- */
-function check_post($code) {
-	$reg = "/^[0-9]d{5}$/";
-	return preg_match($reg, $postcode);
-}
-
-
-/**
- * 检查是否是国内电话号格式
- * @param  string $tel 电话号码
- * @return bool
- */
-function  check_telphone($tel) {
-	$isTel="/^([0-9]{3,4}-)?[0-9]{7,8}$/";
-	preg_match($isTel, $tel);
-}
-
-
-//检查用户名
-function check_username ($username) {
-	return preg_match('/^[a-z\d_]{5,20}$/i', $username);
-}
-
-
-//检查IPV4
-function check_ipv4($ip) {
-	return preg_match('/^(([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]).){3}([1-9]?[0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$/',$ip);	
-}
-
-
-//检查url
-function check_url($url) {
-	return preg_match('/^(http|https|ftp):\/\/([A-Z0-9][A-Z0-9_-]*(?:\.[A-Z0-9][A-Z0-9_-]*)+):?(\d+)?\/?/i', $url);
-}
-
 
 /**
  * 生成随机数字和字母
@@ -405,5 +358,65 @@ function random($len = 6, $type=1) {
 
 	return $salt;
 }
+
+
+/**
+ * 短信验证码
+ * @param  integer $lenght [description]
+ * @return [type]          [description]
+ */
+function smsNumber($lenght=6){
+	$char="1234567890";
+	$str = "";
+	while(strlen($str) < $lenght){
+		$str .= substr($char, (mt_rand()%strlen($char)),1);
+	}
+	return $str;
+}
+
+
+/**
+ * 计算密码强度
+ * @param  [type] $string [description]
+ * Returns a float between 0 and 100. The closer the number is to 100 the 
+ * the stronger password is; further from 100 the weaker the password is. 
+ */
+function password_strength($string){ 
+    $h    = 0; 
+    $size = strlen($string); 
+    foreach(count_chars($string, 1) as $v){ 
+        $p = $v / $size; 
+        $h -= $p * log($p) / log(2); 
+    } 
+    $strength = ($h / 4) * 100; 
+    if($strength > 100){ 
+        $strength = 100; 
+    } 
+    return $strength; 
+} 
+
+
+/**
+ * 隐藏手机号hide mobile like 138****5493
+ * @param  [type] $mobile [description]
+ * @return [type]         [description]
+ */
+function hideMobile($mobile){
+     $pattern = "/(1\d{1,2})\d\d(\d{0,3})/";
+     $replacement = "\$1****\$3";
+     return preg_replace($pattern, $replacement, $mobile);
+}
+
+
+//最好的序列化对象
+public function my_serialize($obj) {
+     return base64_encode(gzcompress(serialize($arr)));
+}
+
+//最好的反序列化对象
+public function my_unserialize($obj) {
+     return unserialize(gzuncompress(base64_decode($txt)));
+}
+
 
 

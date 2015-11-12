@@ -1,18 +1,5 @@
 <?php 
 /**
-  * ===========================================
-  * Project: phplib
-  * Function: php文件系统处理函数
-  * Time: 2015-5-20 15:22:16 @ Create
-  * Copyright (c) 2007 - 2015 phplib Studio
-  * Github: https://github.com/xudong7930/phplib
-  * Developer: phplib
-  * E-mail: xudong7930@gmail.com
-  * ===========================================
-  */
- 
-
- /**
  * get a file extension name
  * 获取文件扩展名
  * 
@@ -375,4 +362,55 @@ function downloadFile($file_path) {
 	}
 
 	fclose($fp);
+}
+
+
+/**
+ *文件下载
+ *file_dir:文件所在目录
+ *file_name:文件名
+ *download("/home/xd/桌面/","20131122-GW-表单设计3.0含英文111.xlsx");
+ */
+function download($file_dir="",$file_name=""){
+
+    $file_dir = chop($file_dir);//去掉路径中多余的空格
+    
+    //得出要下载的文件的路径
+    if($file_dir != '') {
+        $file_path = $file_dir;
+        if(substr($file_dir,strlen($file_dir)-1,strlen($file_dir)) != '/')
+            $file_path .= '/';
+        $file_path .= $file_name;
+    }
+    else{
+        $file_path = $file_name;
+    }
+
+    //判断要下载的文件是否存在
+    if(!file_exists($file_path)) {
+        echo 'File not exist.';
+        return false;
+    }
+    $file_size = filesize($file_path);
+
+    header("Content-type: application/octet-stream");
+    header("Accept-Ranges: bytes");
+    header("Accept-Length: $file_size");
+    header("Content-Disposition: attachment; filename=".$file_name);
+
+    $fp = fopen($file_path,"r");
+    $buffer_size = 1024;
+    $cur_pos = 0;
+
+    while(!feof($fp)&&$file_size-$cur_pos>$buffer_size)
+    {
+        $buffer = fread($fp,$buffer_size);
+        echo $buffer;
+        $cur_pos += $buffer_size;
+    }
+
+    $buffer = fread($fp,$file_size-$cur_pos);
+    echo $buffer;
+    fclose($fp);
+    return true;
 }
