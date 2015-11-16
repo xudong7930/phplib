@@ -1,4 +1,16 @@
 <?php 
+
+/**
+ * 匹配中文
+ * @param  [type] $string [description]
+ * @return [type]         [description]
+ */
+function check_chinese($string){
+	$pattern = "/^[\x{4e00}-\x{9fa5}]+$/u";
+	return preg_match($pattern, $string);
+}
+
+
 //检查身份证号
 function check_idcard($idcard){
 
@@ -46,6 +58,7 @@ function check_idcard($idcard){
  */
 function check_mobile($str) {
 	$reg = "/13[0-9]{1}\d{8}|14[5,7]\d{8}|15[012356789]\d{8}|18[012356789]\d{8}/";
+	$pattern = "/^((1[3,5,8][0-9])|(14[5,7])|(17[0,6,7,8]))\d{8}$/";
 	return preg_match($reg, $str);
 }
 
