@@ -1,20 +1,21 @@
 <?php 
+
+
 /**
- * get a file extension name
- * 获取文件扩展名
- * 
- * @param  string $filename 文件名称
- * @return string
+ * 最好的获取文件扩展名
+ * @param  [type] $filename [description]
+ * @return [type]           [description]
  */
-function getFileExtension($filename) {
-	if(empty($filename)) {
-		return false;
-	}
-
-	$extend = explode(".", $filename);
-
-	return end($extend);
+function getFileExtension($filename){
+/*
+PATHINFO_DIRNAME – 目录
+PATHINFO_BASENAME – 文件名（含扩展名）
+PATHINFO_EXTENSION – 扩展名
+PATHINFO_FILENAME – 文件名（不含扩展名，PHP>5.2）
+*/
+	return pathinfo($filename, PATHINFO_EXTENSION);
 }
+
 
 
  //删除文件
